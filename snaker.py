@@ -1,5 +1,6 @@
 # snaker! by Ethan Jurman
-# the snake goes around the screen and when it hits the rat it gets points for the amount of distance it traveled from his tail
+# the snake goes around the screen and when it hits the rat it gets points for the amount of distance it traveled from his tail and goes to the next level
+# if the snake hits a mouse, it will increase the points at the end of the level based on the distance of the snake tail to the mice.
 import random
 import math
 import tkinter as Tkinter
@@ -10,10 +11,12 @@ class Snake:
 		self.points = 0
 		self.head = (0,10)
 		self.body = []
-		self.tail = (0,0)
 		self.direction = "up"
+		self.nDirection = "up"
 		self.canvas = canvas
-		self.rat = (round(random.randrange(canvasSize - 10), -1), round(random.randrange(canvasSize - 10), -1))
+		self.rat = randomPosition()
+		self.mice = [randomPosition(), randomPosition(), randomPosition(), randomPosition()]
+		self.scoreIncr = 1
 		self.run = True
 		self.speed = 150
 		self.level = 1
@@ -28,15 +31,24 @@ class Snake:
 		x = (self.rat[0] // 10)*10
 		y = (self.rat[1] // 10)*10
 		self.canvas.create_rectangle(x, y, x+10, y+10, fill="green", outline="grey")
+		for mouse in self.mice:
+			x = (mouse[0] // 10)*10
+			y = (mouse[1] // 10)*10
+			self.canvas.create_rectangle(x, y, x+10, y+10, fill="orange", outline="grey")
+			
 		
 	def eraseSnake(self):
 		for i in range(len(self.body)):
 			sect = self.body[i]
 			self.canvas.create_rectangle(sect[0], sect[1], sect[0] + 10, sect[1] + 10, fill="white", outline="grey")
+		for mouse in self.mice:
+			x = (mouse[0] // 10)*10
+			y = (mouse[1] // 10)*10
+			self.canvas.create_rectangle(x, y, x+10, y+10, fill="white", outline="grey")
 		
 	def update(self):
 		self.body.append(self.head)
-		print(self.head)
+		self.direction = self.nDirection
 		if self.direction == "up":
 			self.head = (self.head[0], self.head[1]+10)
 		elif self.direction == "down":
@@ -48,10 +60,13 @@ class Snake:
 		if self.head in self.body or (canvasSize in self.head) or (-10 in self.head):
 			print("GAME OVER")
 			self.run = False
+		if self.head in self.mice:
+			self.scoreIncr += (1/len(self.body)) * 300
 		if self.head == self.rat:
-			print("LEVEL UP")
-			self.speed = round(self.speed / 1.2)
-			self.points += int((len(self.body) * len(self.body)) // 10 * self.level)
+			self.level += 1
+			print("LEVEL UP: " + str(self.level) )
+			self.speed = round(self.speed / 1.05)
+			self.points += (len(self.body) // 10 * self.level) * int(self.scoreIncr)
 			self.eraseSnake()
 			print("POINTS: " + str(self.points))
 			self.feed()
@@ -59,8 +74,8 @@ class Snake:
 		self.drawSnake()
 		if self.run:
 			speedMod = len(self.body)
-			if len(self.body) > 30:
-				speedMod = 30
+			if len(self.body) > self.level * 10:
+				speedMod = self.level * 10
 			self.canvas.after(self.speed - speedMod, self.update)
 		else:
 			#self.canvas.after(500, newGame)
@@ -68,20 +83,23 @@ class Snake:
 	
 	def changeDirection(self, event):
 		direction = event.char
-		if direction == "s" and self.direction != "down":
-			self.direction = "up"
-		elif direction == "w" and self.direction != "up":
-			self.direction = "down"
-		elif direction == "a" and self.direction != "right":
-			self.direction = "left"
-		elif direction == "d" and self.direction != "left":
-			self.direction = "right"
+		if direction == "s" and self.nDirection != "down":
+			self.nDirection = "up"
+		elif direction == "w" and self.nDirection != "up":
+			self.nDirection = "down"
+		elif direction == "a" and self.nDirection != "right":
+			self.nDirection = "left"
+		elif direction == "d" and self.nDirection != "left":
+			self.nDirection = "right"
 		
 	def feed(self):
 		self.body = []
-		self.tail = self.head
-		self.rat = (round(random.randrange(canvasSize), -1), round(random.randrange(canvasSize), -1))
+		self.rat = randomPosition()
+		self.mice = [randomPosition(),randomPosition(),randomPosition(),randomPosition()]
 		self.drawRat()
+		
+def randomPosition():
+	return (round(random.randrange(canvasSize - 20), -1), round(random.randrange(canvasSize - 20), -1))
 		
 def newGame():
 	top = Tkinter.Tk()
