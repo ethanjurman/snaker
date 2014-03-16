@@ -61,7 +61,7 @@ class Snake:
 			print("GAME OVER")
 			self.run = False
 		if self.head in self.mice:
-			self.scoreIncr += (1/len(self.body)) * 300
+			self.scoreIncr += (1/len(self.body)) * canvasSize
 		if self.head == self.rat:
 			self.level += 1
 			print("LEVEL UP: " + str(self.level) )
